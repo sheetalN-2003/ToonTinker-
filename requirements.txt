@@ -1,20 +1,20 @@
 # Core Requirements
-streamlit==1.28.0
-torch==2.0.1+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
-diffusers==0.21.4
-transformers==4.33.3
-accelerate==0.21.0
-safetensors==0.3.3
+streamlit
+torch
+diffusers
+transformers
+accelerate
+safetensors
 
 # Image/Media Processing
-pillow==10.0.1
-numpy==1.24.4
-opencv-python-headless==4.7.0.72
+pillow
+numpy
+opencv-python-headless
 
 # Voice/Audio
-streamlit-webrtc==0.44.4
-av==10.0.0
+streamlit-webrtc
+av
 
-# Optional (for future PDF/Animation features)
-fpdf2==2.7.5
-moviepy==1.0.3
+# Optional Extras
+fpdf2
+moviepy
