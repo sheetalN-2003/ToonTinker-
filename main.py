@@ -23,31 +23,43 @@ if 'comic_data' not in st.session_state:
         'style': "Comic Book"
     }
 
-# --- OPTIMIZED MODEL LOADING ---
+# --- OPTIMIZED MODEL LOADING WITH ACCELERATE ---
 @st.cache_resource
 def load_models():
     try:
+        # Shared configuration for all models
+        common_kwargs = {
+            "torch_dtype": torch.float16 if torch.cuda.is_available() else torch.float32,
+            "low_cpu_mem_usage": True,
+            "use_safetensors": True,
+            "device_map": "auto",
+            "safety_checker": None
+        }
+
         # Use smaller base model
         base_pipe = StableDiffusionPipeline.from_pretrained(
             "stabilityai/stable-diffusion-2-1",
-            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-            safety_checker=None
-        ).to("cuda" if torch.cuda.is_available() else "cpu")
+            **common_kwargs
+        )
         
         # Lite version of ControlNet
         controlnet = ControlNetModel.from_pretrained(
             "lllyasviel/sd-controlnet-canny",
-            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
+            **common_kwargs
         )
         
         panel_pipe = StableDiffusionControlNetPipeline.from_pretrained(
             "stabilityai/stable-diffusion-2-1",
             controlnet=controlnet,
-            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
-        ).to("cuda" if torch.cuda.is_available() else "cpu")
+            **common_kwargs
+        )
         
         # Smaller story analyzer
-        story_analyzer = pipeline("text-generation", model="gpt2")
+        story_analyzer = pipeline(
+            "text-generation", 
+            model="gpt2",
+            device=0 if torch.cuda.is_available() else -1
+        )
         
         return {
             "base": base_pipe,
@@ -86,7 +98,7 @@ with tab1:
     
     with col1:
         story_input = st.text_area("Enter your story:", height=200,
-                                 value="A superhero battles robots in futuristic city")
+                                value="A superhero battles robots in futuristic city")
         
         if st.button("Generate Comic", type="primary"):
             models = load_models()
@@ -99,8 +111,8 @@ with tab1:
                             char_prompt,
                             num_inference_steps=30,
                             width=512,
-                            height=768
-                        ).images[0]
+                            height=768,
+                            generator=torch.Generator(device=models["base"].device).images[0]
                         
                         # Generate panels
                         panels = []
@@ -109,7 +121,8 @@ with tab1:
                                 f"Comic panel {i+1}: {story_input}",
                                 num_inference_steps=20,
                                 width=512,
-                                height=512
+                                height=512,
+                                generator=torch.Generator(device=models["panel"].device)
                             ).images[0]
                             panels.append(panel)
                         
@@ -119,6 +132,7 @@ with tab1:
                         
                     except torch.cuda.OutOfMemoryError:
                         st.error("GPU memory full! Try smaller images or fewer panels")
+                        st.button("Retry with smaller settings", on_click=None)
                     except Exception as e:
                         st.error(f"Generation failed: {str(e)}")
     
@@ -131,6 +145,14 @@ with tab1:
 with tab2:
     st.header("Settings")
     art_style = st.selectbox("Art Style", ["Comic Book", "Manga", "Noir"])
+    
+    # Add quality/performance tradeoff
+    quality_mode = st.radio(
+        "Quality Mode",
+        ["Fast (lower quality)", "Balanced", "Best (slowest)"],
+        index=1
+    )
+    
     if st.button("Clear Cache"):
         st.cache_resource.clear()
         st.success("Cache cleared!")
@@ -153,6 +175,7 @@ if __name__ == "__main__":
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    .stAlert {font-size: 0.9rem;}
     </style>
     """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
