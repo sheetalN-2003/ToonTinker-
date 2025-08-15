@@ -112,7 +112,7 @@ with tab1:
                             num_inference_steps=30,
                             width=512,
                             height=768,
-                            generator=torch.Generator(device=models["base"].device).images[0]
+                            generator=torch.Generator(device=models["base"].device).images[0])
                         
                         # Generate panels
                         panels = []
