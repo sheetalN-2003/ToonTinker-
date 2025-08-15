@@ -1,4 +1,4 @@
-# Core packages
+# Core Packages
 streamlit
 torch
 diffusers
@@ -6,13 +6,20 @@ transformers
 accelerate
 safetensors
 
-# Image processing
+# Image Processing
 pillow
 numpy
+opencv-python-headless
 
-# Voice input
+# Voice/Audio Features
 streamlit-webrtc
+av
 
-# Optional extras
-fpdf2
-moviepy
+# Authentication & Utilities
+python-multipart
+pyngrok # Optional for sharing
+python-dotenv  # For environment variables
+
+# Optional Extras
+fpdf2  # For PDF export
+moviepy # For animation features
