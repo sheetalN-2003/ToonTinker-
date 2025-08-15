@@ -1,4 +1,4 @@
-# Core Requirements
+# Core packages
 streamlit
 torch
 diffusers
@@ -6,15 +6,13 @@ transformers
 accelerate
 safetensors
 
-# Image/Media Processing
+# Image processing
 pillow
 numpy
-opencv-python-headless
 
-# Voice/Audio
+# Voice input
 streamlit-webrtc
-av
 
-# Optional Extras
+# Optional extras
 fpdf2
 moviepy
